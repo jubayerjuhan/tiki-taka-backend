@@ -7,8 +7,21 @@ import { SEAT_STATUS } from '../config/constants.js';
 // Create Bull queue for seat hold expiration cleanup
 // Use REDIS_URL_PROD for production, REDIS_URL for dev, or localhost as fallback
 const redisUrl = process.env.REDIS_URL_PROD || process.env.REDIS_URL || 'redis://localhost:6379';
+const parsed = new URL(redisUrl);
+const bullRedisConfig: Bull.QueueOptions['redis'] = {
+  host: parsed.hostname,
+  port: Number(parsed.port || 6379),
+};
+if (parsed.password) {
+  bullRedisConfig.password = parsed.password;
+}
+if (parsed.protocol === 'rediss:') {
+  bullRedisConfig.tls = {};
+}
 
-const seatHoldQueue = new Bull('seat-hold-cleanup', redisUrl);
+const seatHoldQueue = new Bull('seat-hold-cleanup', {
+  redis: bullRedisConfig,
+});
 
 /**
  * Process seat hold expiration cleanup
