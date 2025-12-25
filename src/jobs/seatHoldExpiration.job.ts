@@ -5,12 +5,10 @@ import { EventSeatState } from '../models/EventSeatState.model.js';
 import { SEAT_STATUS } from '../config/constants.js';
 
 // Create Bull queue for seat hold expiration cleanup
-const seatHoldQueue = new Bull('seat-hold-cleanup', {
-  redis: {
-    host: process.env.REDIS_URL?.split(':')[1]?.replace('//', '') || 'localhost',
-    port: parseInt(process.env.REDIS_URL?.split(':')[2] || '6379'),
-  },
-});
+// Use REDIS_URL_PROD for production, REDIS_URL for dev, or localhost as fallback
+const redisUrl = process.env.REDIS_URL_PROD || process.env.REDIS_URL || 'redis://localhost:6379';
+
+const seatHoldQueue = new Bull('seat-hold-cleanup', redisUrl);
 
 /**
  * Process seat hold expiration cleanup
